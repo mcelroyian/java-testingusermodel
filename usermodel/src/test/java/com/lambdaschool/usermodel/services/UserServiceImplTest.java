@@ -1,6 +1,7 @@
 package com.lambdaschool.usermodel.services;
 
 import com.lambdaschool.usermodel.UserModelApplication;
+import com.lambdaschool.usermodel.models.Role;
 import com.lambdaschool.usermodel.models.User;
 import com.lambdaschool.usermodel.models.UserRoles;
 import com.lambdaschool.usermodel.models.Useremail;
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.persistence.EntityNotFoundException;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -28,6 +30,9 @@ public class UserServiceImplTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RoleService roleService;
 
     @Before
     public void setUp() throws Exception {
@@ -56,6 +61,7 @@ public class UserServiceImplTest {
 
     @Test
     public void cfindAll() {
+
         assertEquals(30, userService.findAll().size());
 
     }
@@ -78,6 +84,12 @@ public class UserServiceImplTest {
     }
 
     @Test
+    public void eagetCountUserEmails() {
+        ArrayList<UserRoles> admins = new ArrayList<>();
+        assertEquals(28, userService.getCountUserEmails().size());
+    }
+
+    @Test
     public void fsave() {
         ArrayList<UserRoles> admins = new ArrayList<>();
 
@@ -90,23 +102,50 @@ public class UserServiceImplTest {
                         "admin@email.local"));
         User newUser = userService.save(u1);
         assertNotNull(newUser);
-        User foundUser
+        User foundUser = userService.findUserById(newUser.getUserid());
+        assertEquals(newUser.getUsername(), foundUser.getUsername());
 
     }
 
     @Test
     public void gupdate() {
+        ArrayList<UserRoles> admins = new ArrayList<>();
+        Role role = roleService.findByName("admin");
+        admins.add(new UserRoles(new User(),
+                role));
+
+        User u1 = new User("second TEST",
+                "password",
+                "fun@times.com",
+                admins);
+        u1.getUseremails()
+                .add(new Useremail(u1,
+                        "admin@email.local"));
+        User newUser = userService.save(u1);
+        assertEquals("fun@times.com", newUser.getPrimaryemail());
     }
 
-    @Test
-    public void hgetCountUserEmails() {
+    @Test(expected = EntityNotFoundException.class)
+    public void HA_deleteUserRoleRoleNotFound()
+    {
+        userService.deleteUserRole(7, 50);
     }
 
-    @Test
-    public void ideleteUserRole() {
+    @Test(expected = EntityNotFoundException.class)
+    public void HB_deleteUserRoleUserNotFound()
+    {
+        userService.deleteUserRole(50, 2);
     }
 
-    @Test
-    public void jaddUserRole() {
+    @Test(expected = EntityNotFoundException.class)
+    public void IC_addUserRoleRoleNotFound()
+    {
+        userService.addUserRole(7, 50);
+    }
+
+    @Test(expected = EntityNotFoundException.class)
+    public void ID_addUserRoleUserNotFound()
+    {
+        userService.addUserRole(50, 2);
     }
 }
